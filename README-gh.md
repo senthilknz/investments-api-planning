@@ -202,6 +202,47 @@ This switches globally - only one account active at a time.
    git remote set-url origin git@github.com-personal:username/repo.git
    ```
 
+#### Concrete Example: senthilknz + ksktechai
+
+1. Generate SSH key for ksktechai account:
+   ```bash
+   ssh-keygen -t ed25519 -C "your-email@example.com" -f ~/.ssh/id_ed25519_ksktechai
+   ```
+
+2. Copy and add public key to GitHub:
+   ```bash
+   cat ~/.ssh/id_ed25519_ksktechai.pub
+   ```
+   Add at: https://github.com/settings/keys (logged in as ksktechai)
+
+3. Configure `~/.ssh/config`:
+   ```
+   # Primary account (senthilknz)
+   Host github.com
+     HostName github.com
+     User git
+     IdentityFile ~/.ssh/id_ed25519
+
+   # Secondary account (ksktechai)
+   Host github.com-ksktechai
+     HostName github.com
+     User git
+     IdentityFile ~/.ssh/id_ed25519_ksktechai
+   ```
+
+4. Usage:
+   ```bash
+   # Clone as senthilknz (default)
+   git clone git@github.com:senthilknz/repo.git
+
+   # Clone as ksktechai
+   git clone git@github.com-ksktechai:ksktechai/repo.git
+
+   # Create repo for ksktechai account
+   gh repo create repo-name --public --source=. --push
+   git remote set-url origin git@github.com-ksktechai:ksktechai/repo-name.git
+   ```
+
 ### Option 3: Per-Repository Git Config
 
 Set different user identity per repo:
