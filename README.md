@@ -1,4 +1,4 @@
-# xapi0one-investments API
+# xapi-one-investments API
 
 A Spring Boot Experience API enabling banking customers to create KiwiSaver or ActiveSeries fund accounts.
 
