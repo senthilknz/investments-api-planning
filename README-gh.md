@@ -1,5 +1,11 @@
 # GitHub CLI Setup and Commands
 
+> **Session Reminder:** When starting a new session with Claude Code, specify which GitHub account to use:
+> - "We're pushing to **senthilknz** today"
+> - "Use **ksktechai** for this project"
+>
+> This ensures commits and pushes go to the correct account.
+
 ## Initial Setup
 
 ### Install GitHub CLI (macOS)
