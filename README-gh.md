@@ -278,3 +278,64 @@ In `~/.gitconfig-work`:
 ```
 
 This automatically applies work config to any repo under `~/work/`.
+
+## Pre-Push Checklist
+
+Before pushing, verify which account your repo is configured for:
+
+### Quick Check Commands
+
+```bash
+# Check remote URL (shows which account)
+git remote -v
+
+# Check commit identity for this repo
+git config user.name
+git config user.email
+```
+
+### Understanding the Output
+
+**Remote URL tells you the account:**
+```
+origin  git@github.com:senthilknz/repo.git           → senthilknz (default SSH key)
+origin  git@github.com-ksktechai:ksktechai/repo.git  → ksktechai (custom SSH key)
+```
+
+**Commit identity shows who the author will be:**
+```
+Senthil Kumar
+senthilknz.anz@gmail.com
+```
+
+### One-Liner Status Check
+
+```bash
+echo "Remote:" && git remote -v | head -1 && echo "Identity:" && git config user.name && git config user.email
+```
+
+### Switching Account for a Repo
+
+If you need to push to a different account:
+
+```bash
+# Switch to ksktechai
+git remote set-url origin git@github.com-ksktechai:ksktechai/repo-name.git
+git config user.name "ksktechai"
+git config user.email "ksktechai-email@example.com"
+
+# Switch back to senthilknz
+git remote set-url origin git@github.com:senthilknz/repo-name.git
+git config user.name "Senthil Kumar"
+git config user.email "senthilknz.anz@gmail.com"
+```
+
+### Best Practice: Directory-Based Organization
+
+Keep repos organized by account:
+```
+~/senthilknz/    → All senthilknz repos
+~/ksktechai/     → All ksktechai repos
+```
+
+Combined with conditional git config, this eliminates manual switching.
