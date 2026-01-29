@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: xapi-one-investments
+
+# Request/Response Logging Filter Configuration
+logging:
+  filter:
+    enabled: true
+    structured-logging: false  # Set to true for JSON-style logs (production)
+    mask-sensitive-data: true
+    max-payload-length: 10000
+    excluded-paths:
+      - /actuator
+      - /health
+      - /swagger-ui
+      - /v3/api-docs
+      - /favicon.ico
+
+  level:
+    com.westpac.xapi.investments.filter: INFO
+    org.springframework.web: INFO
+
+---
+# Production profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  filter:
+    structured-logging: true  # Single-line structured logs for production log aggregation
