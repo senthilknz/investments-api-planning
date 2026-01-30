@@ -1,5 +1,14 @@
 # Claude Code Project Instructions
 
+## FIRST THING - REQUIRED
+
+**STOP. Before doing anything else, ask the user:**
+> "Which GitHub account should we use for this session - **senthilknz** or **ksktechai**?"
+
+Do not proceed with any other tasks until this is answered.
+
+---
+
 ## GitHub Account Setup
 
 This machine has multiple GitHub accounts configured:
@@ -8,9 +17,6 @@ This machine has multiple GitHub accounts configured:
 |---------|----------|-------|
 | senthilknz | `github.com` (default) | Personal projects |
 | ksktechai | `github.com-ksktechai` | Secondary account |
-
-**At the start of each session, ask the user:**
-> "Which GitHub account should we use for this session - **senthilknz** or **ksktechai**?"
 
 **Before any `git push`, verify:**
 ```bash
