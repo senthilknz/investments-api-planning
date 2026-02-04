@@ -60,3 +60,17 @@ For each finding, provide:
 2. Severity (Critical/High/Medium/Low)
 3. Description of the issue
 4. Recommended fix with code example
+
+## Output Instructions
+
+After completing the review, generate a summary report and save it as a markdown file:
+
+- **Location**: `docs/code-reviews/`
+- **Filename format**: `code-review-YYYY-MM-DD-HHmmss.md`
+- **Example**: `docs/code-reviews/code-review-2026-02-05-143052.md`
+
+The report should include:
+1. **Summary** - Overview with total findings count by severity
+2. **Findings by Category** - Grouped by the categories above
+3. **Recommendations** - Prioritized action items
+4. **Review Metadata** - Date, time, reviewer, files analyzed
