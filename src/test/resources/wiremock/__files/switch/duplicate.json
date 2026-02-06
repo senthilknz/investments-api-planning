@@ -1,0 +1,4 @@
+{
+  "error": "Switch already in progress",
+  "code": "DUPLICATE_SWITCH"
+}

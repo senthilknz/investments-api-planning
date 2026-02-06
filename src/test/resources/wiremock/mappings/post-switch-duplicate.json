@@ -1,0 +1,16 @@
+{
+  "name": "Switch Fund - Duplicate (Conflict)",
+  "scenarioName": "Duplicate Switch",
+  "requiredScenarioState": "Switch Already In Progress",
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/esb/v1/accounts/[^/]+/switch"
+  },
+  "response": {
+    "status": 409,
+    "bodyFileName": "switch/duplicate.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Switch Fund - Account Locked (Forbidden)",
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/esb/v1/accounts/LOCKED_ACCT/switch"
+  },
+  "response": {
+    "status": 403,
+    "bodyFileName": "switch/forbidden.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "priority": 1
+}

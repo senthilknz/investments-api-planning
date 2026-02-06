@@ -1,0 +1,16 @@
+{
+  "name": "ESB - Timeout (Slow Response)",
+  "request": {
+    "method": "ANY",
+    "urlPathPattern": "/esb/v1/accounts/ESB_SLOW/.*"
+  },
+  "response": {
+    "status": 200,
+    "body": "{}",
+    "fixedDelayMilliseconds": 10000,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "priority": 1
+}

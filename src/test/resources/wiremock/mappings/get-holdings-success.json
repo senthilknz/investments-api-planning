@@ -1,0 +1,14 @@
+{
+  "name": "Get Holdings - Success",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/esb/v1/accounts/[^/]+/holdings"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "holdings/success.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

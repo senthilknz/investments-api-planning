@@ -1,0 +1,24 @@
+{
+  "name": "Switch Fund - Success",
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/esb/v1/accounts/[^/]+/switch",
+    "headers": {
+      "Content-Type": {
+        "contains": "application/json"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$.toFundCode"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "switch/accepted.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

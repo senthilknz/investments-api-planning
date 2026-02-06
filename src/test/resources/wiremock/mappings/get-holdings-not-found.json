@@ -1,0 +1,15 @@
+{
+  "name": "Get Holdings - Customer Not Found",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/esb/v1/accounts/UNKNOWN/holdings"
+  },
+  "response": {
+    "status": 404,
+    "bodyFileName": "holdings/not-found.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "priority": 1
+}

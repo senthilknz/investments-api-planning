@@ -1,0 +1,15 @@
+{
+  "name": "ESB - Internal Server Error",
+  "request": {
+    "method": "ANY",
+    "urlPathPattern": "/esb/v1/accounts/ESB_ERROR/.*"
+  },
+  "response": {
+    "status": 500,
+    "bodyFileName": "holdings/esb-error.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "priority": 1
+}

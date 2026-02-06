@@ -1,0 +1,20 @@
+{
+  "Data": {
+    "holdings": [
+      {
+        "fundCode": "KS-GROWTH",
+        "fundName": "KiwiSaver Growth Fund",
+        "units": 1500.5432,
+        "unitPrice": 2.3456,
+        "marketValue": 3519.43
+      },
+      {
+        "fundCode": "KS-CONSERV",
+        "fundName": "KiwiSaver Conservative Fund",
+        "units": 800.0000,
+        "unitPrice": 1.8901,
+        "marketValue": 1512.08
+      }
+    ]
+  }
+}
