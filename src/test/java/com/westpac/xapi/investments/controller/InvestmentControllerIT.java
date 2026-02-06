@@ -1,21 +1,17 @@
 package com.westpac.xapi.investments.controller;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.RestClient;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
@@ -32,9 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  *   Real HTTP → Controller → Service → ESB Client → [WireMock] ESB API
  *
+ * Uses Spring 6.1+ RestClient (fluent, synchronous) for test HTTP calls.
+ *
  * Usage:
  *   1. Replace placeholder endpoint paths with your actual API paths
- *   2. Replace placeholder DTOs (use String or Map initially, then switch to real DTOs)
+ *   2. Replace placeholder DTOs (use String initially, then switch to real DTOs)
  *   3. Update WireMock stubs to match your ESB contract
  *   4. Add scenarios specific to your business logic
  */
@@ -46,27 +44,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Investment Controller Integration Tests")
 class InvestmentControllerIT {
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    private RestClient restClient;
 
     @InjectWireMock("esb-service")
     private WireMockServer esbMock;
 
     @BeforeEach
-    void resetStubs() {
+    void setUp(@LocalServerPort int port) {
+        restClient = RestClient.builder()
+            .baseUrl("http://localhost:" + port)
+            .defaultHeader("X-Correlation-ID", "test-correlation-id")
+            .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            .build();
         esbMock.resetAll();
-    }
-
-    // -------------------------------------------------------------------------
-    // Helper methods
-    // -------------------------------------------------------------------------
-
-    private HttpHeaders defaultHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-Correlation-ID", "test-correlation-id");
-        // Add any other required headers (e.g., Authorization, X-Customer-ID)
-        return headers;
     }
 
     // -------------------------------------------------------------------------
@@ -110,20 +100,23 @@ class InvestmentControllerIT {
                     }
                     """)));
 
-            // Make real HTTP call
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_HOLDINGS_PATH.formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            // Make real HTTP call using RestClient
+            var response = restClient.get()
+                .uri(API_HOLDINGS_PATH.formatted(customerId))
+                .retrieve()
+                .toEntity(String.class);
 
             // Assert response
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             // TODO: Replace String.class with your actual response DTO and assert fields
-            // assertThat(response.getBody().getData().getHoldings()).hasSize(2);
+            // var body = restClient.get()
+            //     .uri(API_HOLDINGS_PATH.formatted(customerId))
+            //     .retrieve()
+            //     .body(HoldingsResponse.class);
+            // assertThat(body.getData().getHoldings()).hasSize(2);
 
-            // Verify ESB was called with correct path and headers
+            // Verify ESB was called with correct path
             esbMock.verify(getRequestedFor(urlPathEqualTo(ESB_HOLDINGS_PATH.formatted(customerId))));
         }
 
@@ -141,11 +134,10 @@ class InvestmentControllerIT {
                     }
                     """)));
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_HOLDINGS_PATH.formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            var response = restClient.get()
+                .uri(API_HOLDINGS_PATH.formatted(customerId))
+                .retrieve()
+                .toEntity(String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             // TODO: Assert empty holdings list in response DTO
@@ -167,11 +159,13 @@ class InvestmentControllerIT {
                         }
                         """)));
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_HOLDINGS_PATH.formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            // RestClient throws on 4xx/5xx by default, use .onStatus() to handle
+            var response = restClient.get()
+                .uri(API_HOLDINGS_PATH.formatted(customerId))
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    (req, res) -> { /* suppress exception, we want to inspect the status */ })
+                .toEntity(String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         }
@@ -190,16 +184,15 @@ class InvestmentControllerIT {
                         }
                         """)));
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_HOLDINGS_PATH.formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            var response = restClient.get()
+                .uri(API_HOLDINGS_PATH.formatted(customerId))
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
             // Service should translate ESB 500 → 502 Bad Gateway (upstream failure)
-            assertThat(response.getStatusCode()).isIn(
-                HttpStatus.BAD_GATEWAY,
-                HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getStatusCode().value()).isIn(502, 500);
         }
 
         @Test
@@ -211,15 +204,14 @@ class InvestmentControllerIT {
                 .willReturn(ok()
                     .withFixedDelay(10_000)));  // exceed configured timeout
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_HOLDINGS_PATH.formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            var response = restClient.get()
+                .uri(API_HOLDINGS_PATH.formatted(customerId))
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
-            assertThat(response.getStatusCode()).isIn(
-                HttpStatus.GATEWAY_TIMEOUT,
-                HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getStatusCode().value()).isIn(504, 500);
         }
 
         @Test
@@ -232,15 +224,14 @@ class InvestmentControllerIT {
                     .withHeader("Content-Type", "application/json")
                     .withBody("this is not json")));
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_HOLDINGS_PATH.formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            var response = restClient.get()
+                .uri(API_HOLDINGS_PATH.formatted(customerId))
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
-            assertThat(response.getStatusCode()).isIn(
-                HttpStatus.BAD_GATEWAY,
-                HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getStatusCode().value()).isIn(502, 500);
         }
     }
 
@@ -281,13 +272,12 @@ class InvestmentControllerIT {
                     }
                     """)));
 
-            HttpEntity<String> request = new HttpEntity<>(requestBody, defaultHeaders());
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_SWITCH_PATH.formatted(customerId),
-                HttpMethod.POST,
-                request,
-                String.class);
+            var response = restClient.post()
+                .uri(API_SWITCH_PATH.formatted(customerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .toEntity(String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             // TODO: Assert response DTO fields
@@ -310,13 +300,14 @@ class InvestmentControllerIT {
                 }
                 """;
 
-            HttpEntity<String> request = new HttpEntity<>(invalidBody, defaultHeaders());
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_SWITCH_PATH.formatted(customerId),
-                HttpMethod.POST,
-                request,
-                String.class);
+            var response = restClient.post()
+                .uri(API_SWITCH_PATH.formatted(customerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(invalidBody)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
             // Bean validation should reject before reaching ESB
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -349,13 +340,14 @@ class InvestmentControllerIT {
                         }
                         """)));
 
-            HttpEntity<String> request = new HttpEntity<>(requestBody, defaultHeaders());
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_SWITCH_PATH.formatted(customerId),
-                HttpMethod.POST,
-                request,
-                String.class);
+            var response = restClient.post()
+                .uri(API_SWITCH_PATH.formatted(customerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         }
@@ -384,13 +376,14 @@ class InvestmentControllerIT {
                         }
                         """)));
 
-            HttpEntity<String> request = new HttpEntity<>(requestBody, defaultHeaders());
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                API_SWITCH_PATH.formatted(customerId),
-                HttpMethod.POST,
-                request,
-                String.class);
+            var response = restClient.post()
+                .uri(API_SWITCH_PATH.formatted(customerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         }
@@ -415,14 +408,11 @@ class InvestmentControllerIT {
                     {"Data": {"holdings": []}}
                     """)));
 
-            HttpHeaders headers = defaultHeaders();
-            headers.set("X-Correlation-ID", correlationId);
-
-            restTemplate.exchange(
-                "/xapi/v1/investments/%s/holdings".formatted(customerId),
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                String.class);
+            restClient.get()
+                .uri("/xapi/v1/investments/%s/holdings".formatted(customerId))
+                .header("X-Correlation-ID", correlationId)
+                .retrieve()
+                .toEntity(String.class);
 
             // Verify correlation ID was forwarded to ESB
             esbMock.verify(getRequestedFor(urlPathMatching("/esb/v1/accounts/.*/holdings"))
@@ -437,14 +427,11 @@ class InvestmentControllerIT {
                     {"Data": {"holdings": []}}
                     """)));
 
-            HttpHeaders headers = defaultHeaders();
-            headers.set("X-Correlation-ID", "my-correlation-id");
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                "/xapi/v1/investments/CUST001/holdings",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                String.class);
+            var response = restClient.get()
+                .uri("/xapi/v1/investments/CUST001/holdings")
+                .header("X-Correlation-ID", "my-correlation-id")
+                .retrieve()
+                .toEntity(String.class);
 
             assertThat(response.getHeaders().getFirst("X-Correlation-ID"))
                 .isEqualTo("my-correlation-id");
@@ -456,11 +443,12 @@ class InvestmentControllerIT {
             esbMock.stubFor(get(urlPathMatching("/esb/v1/accounts/.*/holdings"))
                 .willReturn(serverError()));
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                "/xapi/v1/investments/CUST001/holdings",
-                HttpMethod.GET,
-                new HttpEntity<>(defaultHeaders()),
-                String.class);
+            var response = restClient.get()
+                .uri("/xapi/v1/investments/CUST001/holdings")
+                .retrieve()
+                .onStatus(status -> status.is5xxServerError(),
+                    (req, res) -> { })
+                .toEntity(String.class);
 
             assertThat(response.getBody()).isNotNull();
             // TODO: Assert error envelope structure matches your API standard:
