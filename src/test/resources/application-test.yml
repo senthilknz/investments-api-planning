@@ -1,0 +1,14 @@
+# Test profile configuration
+# WireMock overrides the esb.base-url property via @ConfigureWireMock annotation
+
+esb:
+  base-url: http://localhost:${wiremock.server.port}
+  timeout:
+    connect: 2000
+    read: 3000
+
+# Reduce logging noise during tests
+logging:
+  level:
+    com.westpac.xapi: DEBUG
+    org.wiremock: WARN
