@@ -1,0 +1,31 @@
+@startuml 04-test-pyramid
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam shadowing false
+
+skinparam rectangle {
+    RoundCorner 5
+}
+
+rectangle "   E2E Tests   \n(few, slow, real ESB)" as e2e #FFCDD2 {
+}
+
+rectangle "      Component Tests      \n(full stack, mocked ESB)" as comp #C8E6C9 {
+}
+
+rectangle "            Unit Tests            \n(fast, isolated, single class)" as unit #BBDEFB {
+}
+
+e2e -[hidden]down- comp
+comp -[hidden]down- unit
+
+note right of comp
+  **<&arrow-thick-left> THIS LAYER**
+  Full application boot
+  Real HTTP calls
+  WireMock for ESB
+end note
+
+@enduml

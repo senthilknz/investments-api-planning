@@ -1,0 +1,32 @@
+@startuml 02-ci-cd-pipeline
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 10
+skinparam shadowing false
+skinparam ActivityDiamondFontSize 13
+
+|CI Pipeline|
+start
+:git push;
+
+:mvn compile;
+
+:Unit Tests;
+
+#C8E6C9:Component Tests
+(SpringBoot + WireMock);
+
+:mvn package;
+
+if (All Passed?) then (yes)
+    #E1F5FE:Deploy to DEV;
+    stop
+else (no)
+    #FFCDD2:Fail Build
+    Notify Team;
+    stop
+endif
+
+@enduml

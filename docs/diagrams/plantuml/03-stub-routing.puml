@@ -1,0 +1,37 @@
+@startuml 03-stub-routing
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 10
+skinparam shadowing false
+
+start
+
+:Incoming ESB Request;
+
+if (Priority 1\nSpecific Customer ID?) then
+    switch (Customer ID?)
+    case (UNKNOWN)
+        #FFCDD2:404 Not Found;
+        stop
+    case (ESB_ERROR)
+        #FFCDD2:500 Server Error;
+        stop
+    case (ESB_SLOW)
+        #FFF9C4:200 + 10s Delay;
+        stop
+    case (LOCKED_ACCT)
+        #FFCDD2:403 Forbidden;
+        stop
+    case (CUST_NEW)
+        #E1F5FE:200 Empty Holdings;
+        stop
+    endswitch
+else (no match)
+    #C8E6C9:Priority 5 (Default)
+    200 Success Response;
+    stop
+endif
+
+@enduml

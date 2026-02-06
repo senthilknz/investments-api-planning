@@ -1,0 +1,39 @@
+@startuml 01-request-flow
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 10
+skinparam shadowing false
+
+skinparam rectangle {
+    FontSize 13
+}
+
+skinparam package {
+    FontSize 14
+    FontStyle bold
+}
+
+package "Test (RestClient)" as test #E1F5FE {
+    rectangle "HTTP\nRequest" as req #BBDEFB
+}
+
+package "Application Boundary" as app #E8F5E9 {
+    rectangle "Servlet\nFilters" as filter #C8E6C9
+    rectangle "Controller" as ctrl #C8E6C9
+    rectangle "Service\nLayer" as svc #C8E6C9
+    rectangle "ESB\nClient" as esb #C8E6C9
+}
+
+package "WireMock" as mock #FCE4EC {
+    database "ESB Stub\n(JSON Mappings)" as stub #FFCDD2
+}
+
+req -right-> filter : Real HTTP
+filter -right-> ctrl
+ctrl -right-> svc
+svc -right-> esb
+esb -right-> stub : Stubbed HTTP
+
+@enduml

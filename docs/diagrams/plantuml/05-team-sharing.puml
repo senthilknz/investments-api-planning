@@ -1,0 +1,26 @@
+@startuml 05-team-sharing
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 10
+skinparam shadowing false
+
+package "WireMock JSON Stubs (Shared Asset)" as stubs #FFF9C4 {
+    file "mappings/*.json" as mappings
+    file "__files/*.json" as files
+}
+
+package "Teams" as teams {
+    rectangle "Backend Team\nComponent tests\nduring development" as be #E1F5FE
+    rectangle "Frontend Team\nStub the API\nduring UI development" as fe #E1F5FE
+    rectangle "QA Team\nAdd new scenarios\nwithout Java changes" as qa #E1F5FE
+    rectangle "Contract Testing\nLightweight API contract\nbetween xAPI and ESB" as ct #E1F5FE
+}
+
+mappings --> be
+mappings --> fe
+mappings --> qa
+files --> ct
+
+@enduml
