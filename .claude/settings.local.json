@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nReplace Mermaid with PlantUML diagrams and PNG exports\n\n- Add PlantUML source files for all 5 diagrams with matching colour scheme\n- Export PNG images for Bitbucket and Confluence compatibility\n- Update COMPONENT-TESTING.md to reference PNG images\n- Move Mermaid versions to docs/diagrams/mermaid/ as fallback\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)"
+    ]
+  }
+}

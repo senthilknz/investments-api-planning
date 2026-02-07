@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Claude Code Insights</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #334155; line-height: 1.65; padding: 48px 24px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    h2 { font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 48px; margin-bottom: 16px; }
+    .subtitle { color: #64748b; font-size: 15px; margin-bottom: 32px; }
+    .nav-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 32px 0; padding: 16px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .nav-toc a { font-size: 12px; color: #64748b; text-decoration: none; padding: 6px 12px; border-radius: 6px; background: #f1f5f9; transition: all 0.15s; }
+    .nav-toc a:hover { background: #e2e8f0; color: #334155; }
+    .stats-row { display: flex; gap: 24px; margin-bottom: 40px; padding: 20px 0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+    .at-a-glance { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+    .glance-title { font-size: 16px; font-weight: 700; color: #92400e; margin-bottom: 16px; }
+    .glance-sections { display: flex; flex-direction: column; gap: 12px; }
+    .glance-section { font-size: 14px; color: #78350f; line-height: 1.6; }
+    .glance-section strong { color: #92400e; }
+    .see-more { color: #b45309; text-decoration: none; font-size: 13px; white-space: nowrap; }
+    .see-more:hover { text-decoration: underline; }
+    .project-areas { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .project-area { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .area-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .area-name { font-weight: 600; font-size: 15px; color: #0f172a; }
+    .area-count { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
+    .area-desc { font-size: 14px; color: #475569; line-height: 1.5; }
+    .narrative { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+    .narrative p { margin-bottom: 12px; font-size: 14px; color: #475569; line-height: 1.7; }
+    .key-insight { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 14px; color: #166534; }
+    .section-intro { font-size: 14px; color: #64748b; margin-bottom: 16px; }
+    .big-wins { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .big-win { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; }
+    .big-win-title { font-weight: 600; font-size: 15px; color: #166534; margin-bottom: 8px; }
+    .big-win-desc { font-size: 14px; color: #15803d; line-height: 1.5; }
+    .friction-categories { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .friction-category { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px; }
+    .friction-title { font-weight: 600; font-size: 15px; color: #991b1b; margin-bottom: 6px; }
+    .friction-desc { font-size: 13px; color: #7f1d1d; margin-bottom: 10px; }
+    .friction-examples { margin: 0 0 0 20px; font-size: 13px; color: #334155; }
+    .friction-examples li { margin-bottom: 4px; }
+    .claude-md-section { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .claude-md-section h3 { font-size: 14px; font-weight: 600; color: #1e40af; margin: 0 0 12px 0; }
+    .claude-md-actions { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #dbeafe; }
+    .copy-all-btn { background: #2563eb; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .copy-all-btn:hover { background: #1d4ed8; }
+    .copy-all-btn.copied { background: #16a34a; }
+    .claude-md-item { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding: 10px 0; border-bottom: 1px solid #dbeafe; }
+    .claude-md-item:last-child { border-bottom: none; }
+    .cmd-checkbox { margin-top: 2px; }
+    .cmd-code { background: white; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #1e40af; border: 1px solid #bfdbfe; font-family: monospace; display: block; white-space: pre-wrap; word-break: break-word; flex: 1; }
+    .cmd-why { font-size: 12px; color: #64748b; width: 100%; padding-left: 24px; margin-top: 4px; }
+    .features-section, .patterns-section { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+    .feature-card { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; }
+    .pattern-card { background: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 8px; padding: 16px; }
+    .feature-title, .pattern-title { font-weight: 600; font-size: 15px; color: #0f172a; margin-bottom: 6px; }
+    .feature-oneliner { font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .pattern-summary { font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .feature-why, .pattern-detail { font-size: 13px; color: #334155; line-height: 1.5; }
+    .feature-examples { margin-top: 12px; }
+    .feature-example { padding: 8px 0; border-top: 1px solid #d1fae5; }
+    .feature-example:first-child { border-top: none; }
+    .example-desc { font-size: 13px; color: #334155; margin-bottom: 6px; }
+    .example-code-row { display: flex; align-items: flex-start; gap: 8px; }
+    .example-code { flex: 1; background: #f1f5f9; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; overflow-x: auto; white-space: pre-wrap; }
+    .copyable-prompt-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .copyable-prompt-row { display: flex; align-items: flex-start; gap: 8px; }
+    .copyable-prompt { flex: 1; background: #f8fafc; padding: 10px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; border: 1px solid #e2e8f0; white-space: pre-wrap; line-height: 1.5; }
+    .feature-code { background: #f8fafc; padding: 12px; border-radius: 6px; margin-top: 12px; border: 1px solid #e2e8f0; display: flex; align-items: flex-start; gap: 8px; }
+    .feature-code code { flex: 1; font-family: monospace; font-size: 12px; color: #334155; white-space: pre-wrap; }
+    .pattern-prompt { background: #f8fafc; padding: 12px; border-radius: 6px; margin-top: 12px; border: 1px solid #e2e8f0; }
+    .pattern-prompt code { font-family: monospace; font-size: 12px; color: #334155; display: block; white-space: pre-wrap; margin-bottom: 8px; }
+    .prompt-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 6px; }
+    .copy-btn { background: #e2e8f0; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #475569; flex-shrink: 0; }
+    .copy-btn:hover { background: #cbd5e1; }
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+    .chart-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .chart-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 12px; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 6px; }
+    .bar-label { width: 100px; font-size: 11px; color: #475569; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; margin: 0 8px; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .bar-value { width: 28px; font-size: 11px; font-weight: 500; color: #64748b; text-align: right; }
+    .empty { color: #94a3b8; font-size: 13px; }
+    .horizon-section { display: flex; flex-direction: column; gap: 16px; }
+    .horizon-card { background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 16px; }
+    .horizon-title { font-weight: 600; font-size: 15px; color: #5b21b6; margin-bottom: 8px; }
+    .horizon-possible { font-size: 14px; color: #334155; margin-bottom: 10px; line-height: 1.5; }
+    .horizon-tip { font-size: 13px; color: #6b21a8; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 4px; }
+    .feedback-header { margin-top: 48px; color: #64748b; font-size: 16px; }
+    .feedback-intro { font-size: 13px; color: #94a3b8; margin-bottom: 16px; }
+    .feedback-section { margin-top: 16px; }
+    .feedback-section h3 { font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 12px; }
+    .feedback-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .feedback-card.team-card { background: #eff6ff; border-color: #bfdbfe; }
+    .feedback-card.model-card { background: #faf5ff; border-color: #e9d5ff; }
+    .feedback-title { font-weight: 600; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
+    .feedback-detail { font-size: 13px; color: #475569; line-height: 1.5; }
+    .feedback-evidence { font-size: 12px; color: #64748b; margin-top: 8px; }
+    .fun-ending { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24; border-radius: 12px; padding: 24px; margin-top: 40px; text-align: center; }
+    .fun-headline { font-size: 18px; font-weight: 600; color: #78350f; margin-bottom: 8px; }
+    .fun-detail { font-size: 14px; color: #92400e; }
+    .collapsible-section { margin-top: 16px; }
+    .collapsible-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .collapsible-header h3 { margin: 0; font-size: 14px; font-weight: 600; color: #475569; }
+    .collapsible-arrow { font-size: 12px; color: #94a3b8; transition: transform 0.2s; }
+    .collapsible-content { display: none; padding-top: 16px; }
+    .collapsible-content.open { display: block; }
+    .collapsible-header.open .collapsible-arrow { transform: rotate(90deg); }
+    @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } .stats-row { justify-content: center; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Claude Code Insights</h1>
+    <p class="subtitle">90 messages across 7 sessions | 2026-01-23 to 2026-02-06</p>
+
+    
+    <div class="at-a-glance">
+      <div class="glance-title">At a Glance</div>
+      <div class="glance-sections">
+        <div class="glance-section"><strong>What's working:</strong> You've built an effective end-to-end workflow where Claude creates code or documentation, iterates on it with you, and commits/pushes — all in one session. Your investments API design work shows a strong collaborative pattern where you maintain architectural control while using Claude as a design partner, correcting it when it overreaches and steering it toward your company's conventions. <a href="#section-wins" class="see-more">Impressive Things You Did →</a></div>
+        <div class="glance-section"><strong>What's hindering you:</strong> On Claude's side, it keeps making assumptions it shouldn't — renaming projects, adding endpoints you didn't ask for, and defaulting to generic Spring Boot patterns instead of your company's established conventions like the ApiRequest envelope. On your side, Claude doesn't have easy access to those domain-specific patterns upfront, so it falls back to guessing until you correct it mid-session. Your CLAUDE.md is a great instinct, but it's still not reliably anchoring Claude's behavior at session start. <a href="#section-friction" class="see-more">Where Things Go Wrong →</a></div>
+        <div class="glance-section"><strong>Quick wins to try:</strong> Try setting up a custom slash command (`/scaffold` or `/api-design`) that pre-loads your company's API conventions, naming rules, and an example ApiRequest envelope — so every session starts with the right context without you having to repeat yourself. You could also explore hooks to auto-run your CLAUDE.md compliance check or `mvn test` after code edits, catching issues before they reach you. <a href="#section-features" class="see-more">Features to Try →</a></div>
+        <div class="glance-section"><strong>Ambitious workflows:</strong> As models get more capable, you'll be able to hand off an entire feature — endpoint design through WireMock tests through green build through commit — in a single prompt, with Claude autonomously running and fixing the build loop. Your heavy documentation work is also ripe for parallelization: imagine spawning sub-agents that simultaneously generate PlantUML diagrams, write API docs, and update your review checklists, then merge everything into a single commit. <a href="#section-horizon" class="see-more">On the Horizon →</a></div>
+      </div>
+    </div>
+    
+
+    <nav class="nav-toc">
+      <a href="#section-work">What You Work On</a>
+      <a href="#section-usage">How You Use CC</a>
+      <a href="#section-wins">Impressive Things</a>
+      <a href="#section-friction">Where Things Go Wrong</a>
+      <a href="#section-features">Features to Try</a>
+      <a href="#section-patterns">New Usage Patterns</a>
+      <a href="#section-horizon">On the Horizon</a>
+      <a href="#section-feedback">Team Feedback</a>
+    </nav>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value">90</div><div class="stat-label">Messages</div></div>
+      <div class="stat"><div class="stat-value">+4,625/-426</div><div class="stat-label">Lines</div></div>
+      <div class="stat"><div class="stat-value">44</div><div class="stat-label">Files</div></div>
+      <div class="stat"><div class="stat-value">6</div><div class="stat-label">Days</div></div>
+      <div class="stat"><div class="stat-value">15</div><div class="stat-label">Msgs/Day</div></div>
+    </div>
+
+    
+    <h2 id="section-work">What You Work On</h2>
+    <div class="project-areas">
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Investments API Design &amp; Architecture</span>
+            <span class="area-count">~2 sessions</span>
+          </div>
+          <div class="area-desc">Iterative design of a new investments API (KiwiSaver/ActiveSeries) including REST endpoint design, Spring Boot class structure, request/response schemas, and ingress patterns. Claude Code was used for generating comprehensive documentation, providing architecture advice, and capturing design decisions in a README, though it initially misunderstood scope by adding unwanted endpoints until corrected with project-specific patterns.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Spring Boot Code Generation &amp; Testing</span>
+            <span class="area-count">~2 sessions</span>
+          </div>
+          <div class="area-desc">Creation of production Spring Boot components including a JSON request/response logging filter with tests and an integration test template using WireMock for external API mocking. Claude Code generated the code, fixed test issues (e.g., a casting bug), ran builds via Bash, and committed/pushed the results to GitHub.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Developer Documentation &amp; Guides</span>
+            <span class="area-count">~3 sessions</span>
+          </div>
+          <div class="area-desc">Extensive creation and refinement of Markdown documentation including code review prompt guides, checklists, PlantUML diagrams rendered as PNGs for Bitbucket/Confluence compatibility, and GitHub CLI and multi-account SSH workflow guides. Claude Code handled writing, reviewing, correcting, and iterating on documentation across multiple sessions, with Markdown being the dominant language used.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Git &amp; GitHub Workflow Management</span>
+            <span class="area-count">~4 sessions</span>
+          </div>
+          <div class="area-desc">Frequent git operations spanning most sessions including committing, pushing, setting up GitHub integration, and pushing projects to public repositories. Claude Code heavily used Bash for git commands, making this the most common goal across all sessions, often as the final step after content creation or code generation.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Claude Code Configuration &amp; Workflow Optimization</span>
+            <span class="area-count">~1 sessions</span>
+          </div>
+          <div class="area-desc">Configuration of CLAUDE.md to establish persistent session reminders and enforce workflow instructions. The user was frustrated that Claude didn't follow existing CLAUDE.md instructions at session start and had Claude strengthen the wording to ensure compliance in future sessions.</div>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">What You Wanted</div>
+        <div class="bar-row">
+        <div class="bar-label">Git Operations</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">15</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Api Design Advice</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40%;background:#2563eb"></div></div>
+        <div class="bar-value">6</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Knowledge Question</div>
+        <div class="bar-track"><div class="bar-fill" style="width:33.33333333333333%;background:#2563eb"></div></div>
+        <div class="bar-value">5</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Documentation Creation Update</div>
+        <div class="bar-track"><div class="bar-fill" style="width:33.33333333333333%;background:#2563eb"></div></div>
+        <div class="bar-value">5</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Code Creation</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20%;background:#2563eb"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Code Architecture Advice</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20%;background:#2563eb"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top Tools Used</div>
+        <div class="bar-row">
+        <div class="bar-label">Bash</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#0891b2"></div></div>
+        <div class="bar-value">93</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Write</div>
+        <div class="bar-track"><div class="bar-fill" style="width:43.01075268817204%;background:#0891b2"></div></div>
+        <div class="bar-value">40</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Edit</div>
+        <div class="bar-track"><div class="bar-fill" style="width:39.784946236559136%;background:#0891b2"></div></div>
+        <div class="bar-value">37</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Read</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.43010752688172%;background:#0891b2"></div></div>
+        <div class="bar-value">19</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Glob</div>
+        <div class="bar-track"><div class="bar-fill" style="width:6.451612903225806%;background:#0891b2"></div></div>
+        <div class="bar-value">6</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">TaskUpdate</div>
+        <div class="bar-track"><div class="bar-fill" style="width:2.1505376344086025%;background:#0891b2"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Languages</div>
+        <div class="bar-row">
+        <div class="bar-label">Markdown</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#10b981"></div></div>
+        <div class="bar-value">54</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">JSON</div>
+        <div class="bar-track"><div class="bar-fill" style="width:22.22222222222222%;background:#10b981"></div></div>
+        <div class="bar-value">12</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Java</div>
+        <div class="bar-track"><div class="bar-fill" style="width:18.51851851851852%;background:#10b981"></div></div>
+        <div class="bar-value">10</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">YAML</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.7037037037037033%;background:#10b981"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Session Types</div>
+        <div class="bar-row">
+        <div class="bar-label">Iterative Refinement</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">4</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Multi Task</div>
+        <div class="bar-track"><div class="bar-fill" style="width:50%;background:#8b5cf6"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Single Task</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;background:#8b5cf6"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-usage">How You Use Claude Code</h2>
+    <div class="narrative">
+      <p>You use Claude Code as a <strong>hands-on engineering partner</strong>, blending code generation with heavy documentation and git workflow automation. Across your 7 sessions, the dominant pattern is iterative refinement — you give Claude a substantial initial task (like a Spring Boot integration test template with WireMock, or an investments API design), then <strong>steer it through multiple rounds of corrections and additions</strong> rather than specifying every detail upfront. Your 90 messages across 122 hours with 20 commits tells the story of someone who keeps Claude running in long-lived sessions, treating it almost like a persistent junior developer. The fact that <strong>Bash is your most-used tool (93 invocations)</strong> — far outpacing Write (40) and Edit (37) — shows you're heavily reliant on Claude for git operations, builds, and command-line workflows, not just code editing. Your top goal being git_operations (15 instances) confirms this: you want Claude to commit, push, and manage your repo lifecycle end-to-end.</p>
+<p>Your interaction style reveals a <strong>documentation-first, standards-conscious developer</strong>. Markdown dominates your language usage (54 files), and you're creating code review checklists, prompt guides, API design READMEs, and rendered diagrams for Confluence/Bitbucket compatibility. You clearly care about institutional knowledge and team enablement. When friction arises, you're <strong>direct and corrective</strong> — you called Claude out for not following CLAUDE.md instructions, corrected it when it assumed 'xapi-wone-investments' was a typo, and pushed back when it added unwanted GET endpoints that didn't match your company's standard ApiRequest envelope pattern. These moments show you have strong opinions about your architecture and naming conventions, and you expect Claude to learn from context rather than assume. Despite 4 misunderstood requests, your satisfaction remained high (46 likely satisfied) and 6 of 7 sessions were fully achieved, suggesting you're patient enough to course-correct but expect Claude to get it right once corrected.</p>
+      <div class="key-insight"><strong>Key pattern:</strong> You treat Claude as a persistent DevOps-aware coding partner, giving broad tasks then iteratively correcting course, with an unusually heavy emphasis on documentation creation and git workflow automation over pure code generation.</div>
+    </div>
+    
+
+    <!-- Response Time Distribution -->
+    <div class="chart-card" style="margin: 24px 0;">
+      <div class="chart-title">User Response Time Distribution</div>
+      <div class="bar-row">
+        <div class="bar-label">2-10s</div>
+        <div class="bar-track"><div class="bar-fill" style="width:47.61904761904761%;background:#6366f1"></div></div>
+        <div class="bar-value">10</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">10-30s</div>
+        <div class="bar-track"><div class="bar-fill" style="width:80.95238095238095%;background:#6366f1"></div></div>
+        <div class="bar-value">17</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">30s-1m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:47.61904761904761%;background:#6366f1"></div></div>
+        <div class="bar-value">10</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">1-2m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#6366f1"></div></div>
+        <div class="bar-value">21</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">2-5m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:66.66666666666666%;background:#6366f1"></div></div>
+        <div class="bar-value">14</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">5-15m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:19.047619047619047%;background:#6366f1"></div></div>
+        <div class="bar-value">4</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">>15m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:4.761904761904762%;background:#6366f1"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
+        Median: 65.6s &bull; Average: 112.3s
+      </div>
+    </div>
+
+    <!-- Multi-clauding Section (matching Python reference) -->
+    <div class="chart-card" style="margin: 24px 0;">
+      <div class="chart-title">Multi-Clauding (Parallel Sessions)</div>
+      
+        <p style="font-size: 14px; color: #64748b; padding: 8px 0;">
+          No parallel session usage detected. You typically work with one Claude Code session at a time.
+        </p>
+      
+    </div>
+
+    <!-- Time of Day & Tool Errors -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title" style="display: flex; align-items: center; gap: 12px;">
+          User Messages by Time of Day
+          <select id="timezone-select" style="font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <option value="0">PT (UTC-8)</option>
+            <option value="3">ET (UTC-5)</option>
+            <option value="8">London (UTC)</option>
+            <option value="9">CET (UTC+1)</option>
+            <option value="17">Tokyo (UTC+9)</option>
+            <option value="custom">Custom offset...</option>
+          </select>
+          <input type="number" id="custom-offset" placeholder="UTC offset" style="display: none; width: 80px; font-size: 12px; padding: 4px; border-radius: 4px; border: 1px solid #e2e8f0;">
+        </div>
+        <div id="hour-histogram">
+      <div class="bar-row">
+        <div class="bar-label">Morning (6-12)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">53</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Afternoon (12-18)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:13.20754716981132%;background:#8b5cf6"></div></div>
+        <div class="bar-value">7</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Evening (18-24)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:56.60377358490566%;background:#8b5cf6"></div></div>
+        <div class="bar-value">30</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Night (0-6)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div>
+        <div class="bar-value">0</div>
+      </div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Tool Errors Encountered</div>
+        <div class="bar-row">
+        <div class="bar-label">Command Failed</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#dc2626"></div></div>
+        <div class="bar-value">5</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">User Rejected</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40%;background:#dc2626"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">File Not Found</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40%;background:#dc2626"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-wins">Impressive Things You Did</h2>
+    <p class="section-intro">Over 7 sessions across two weeks, you've built a highly effective documentation-and-code workflow powered heavily by Bash and Write operations, achieving full success in nearly every session.</p>
+    <div class="big-wins">
+      
+        <div class="big-win">
+          <div class="big-win-title">End-to-End Git-Driven Development</div>
+          <div class="big-win-desc">You've made git operations your most frequent workflow goal, seamlessly weaving code creation, documentation, and version control into a single continuous flow. Rather than treating commits as an afterthought, you have Claude create, refine, commit, and push in one session — resulting in 20 commits across 7 sessions with minimal friction.</div>
+        </div>
+      
+        <div class="big-win">
+          <div class="big-win-title">Documentation-First with Rendered Diagrams</div>
+          <div class="big-win-desc">You're producing a remarkable volume of Markdown documentation (54 files), including rendered PlantUML diagrams converted to PNG for Bitbucket and Confluence compatibility. This shows a thoughtful approach to making technical docs consumable across your organization's tooling, not just developer-readable in a repo.</div>
+        </div>
+      
+        <div class="big-win">
+          <div class="big-win-title">Iterative API Design Collaboration</div>
+          <div class="big-win-desc">Your investments API design session demonstrates a strong collaborative pattern — you iterated on REST endpoints, request schemas, and Spring Boot class structure while correcting Claude when it overstepped (adding unwanted endpoints) and guiding it toward your company's standard ApiRequest envelope pattern. You effectively used Claude as a design partner while maintaining architectural control and ensuring the output matched your team's conventions.</div>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">What Helped Most (Claude's Capabilities)</div>
+        <div class="bar-row">
+        <div class="bar-label">Multi-file Changes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#16a34a"></div></div>
+        <div class="bar-value">4</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Proactive Help</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;background:#16a34a"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Correct Code Edits</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;background:#16a34a"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Good Explanations</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;background:#16a34a"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Outcomes</div>
+        <div class="bar-row">
+        <div class="bar-label">Mostly Achieved</div>
+        <div class="bar-track"><div class="bar-fill" style="width:16.666666666666664%;background:#8b5cf6"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Fully Achieved</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">6</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-friction">Where Things Go Wrong</h2>
+    <p class="section-intro">Your sessions show a pattern of Claude making assumptions about your intent and conventions rather than asking clarifying questions first, leading to unnecessary correction cycles.</p>
+    <div class="friction-categories">
+      
+        <div class="friction-category">
+          <div class="friction-title">Incorrect Assumptions About Naming and Scope</div>
+          <div class="friction-desc">Claude repeatedly assumed it knew better than you about project names and API scope, adding unwanted code or renaming things without asking. You could mitigate this by including explicit naming conventions and scope boundaries in your CLAUDE.md, or by front-loading constraints in your initial prompt (e.g., 'only create what I ask for, nothing more').</div>
+          <ul class="friction-examples"><li>Claude assumed 'xapi-wone-investments' was a typo and tried to rename it, wasting a correction cycle when it was actually the correct project name.</li><li>Claude added GET endpoints and extra classes you didn't ask for during API design, forcing you to walk it back and clarify the actual scope you wanted.</li></ul>
+        </div>
+      
+        <div class="friction-category">
+          <div class="friction-title">Failure to Recognize Domain-Specific Patterns</div>
+          <div class="friction-desc">Claude didn't pick up on your company's established conventions (like the ApiRequest envelope pattern) until you manually provided an example from another project. You could save time by documenting these patterns in CLAUDE.md or a conventions file that Claude reads at session start, so it doesn't default to generic Spring Boot patterns.</div>
+          <ul class="friction-examples"><li>Claude didn't grasp your company's standard ApiRequest envelope pattern until you explicitly showed it an example from another project, delaying the API design work.</li><li>A generated test had a casting issue that required a fix before the build succeeded, suggesting Claude wasn't fully aligned with your project's type conventions.</li></ul>
+        </div>
+      
+        <div class="friction-category">
+          <div class="friction-title">CLAUDE.md Instructions Not Being Followed</div>
+          <div class="friction-desc">Claude failed to follow your CLAUDE.md instructions at session start, and you had to explicitly call it out before it complied. This is a significant trust issue — you even dedicated an entire session to strengthening the wording. Consider using very direct, imperative language in CLAUDE.md (e.g., 'ALWAYS do X before responding') and verifying compliance in your first message of each session.</div>
+          <ul class="friction-examples"><li>Claude ignored CLAUDE.md instructions at the start of a session, requiring you to interrupt your workflow to call out the non-compliance before it would follow them.</li><li>You spent an entire session strengthening CLAUDE.md wording because the previous instructions weren't assertive enough to ensure consistent compliance, which is time you could have spent on actual development.</li></ul>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Primary Friction Types</div>
+        <div class="bar-row">
+        <div class="bar-label">Misunderstood Request</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#dc2626"></div></div>
+        <div class="bar-value">4</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Buggy Code</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;background:#dc2626"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Inferred Satisfaction (model-estimated)</div>
+        <div class="bar-row">
+        <div class="bar-label">Dissatisfied</div>
+        <div class="bar-track"><div class="bar-fill" style="width:4.3478260869565215%;background:#eab308"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Likely Satisfied</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#eab308"></div></div>
+        <div class="bar-value">46</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Satisfied</div>
+        <div class="bar-track"><div class="bar-fill" style="width:4.3478260869565215%;background:#eab308"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      </div>
+    </div>
+
+    
+    
+    <h2 id="section-features">Existing CC Features to Try</h2>
+    <div class="claude-md-section">
+      <h3>Suggested CLAUDE.md Additions</h3>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code to add it to your CLAUDE.md.</p>
+      <div class="claude-md-actions">
+        <button class="copy-all-btn" onclick="copyAllCheckedClaudeMd()">Copy All Checked</button>
+      </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-0" class="cmd-checkbox" checked data-text="Add as a top-level section in CLAUDE.md, near the top since it applies to almost every session.\n\n## Git Workflow
+Always commit and push changes after completing each task unless explicitly told otherwise. Use clear, descriptive commit messages.">
+          <label for="cmd-0">
+            <code class="cmd-code">## Git Workflow
+Always commit and push changes after completing each task unless explicitly told otherwise. Use clear, descriptive commit messages.</code>
+            <button class="copy-btn" onclick="copyCmdItem(0)">Copy</button>
+          </label>
+          <div class="cmd-why">Git operations were the #1 goal across sessions (15 occurrences) — nearly every session involved committing and pushing, so this should be the default behavior without needing to ask.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-1" class="cmd-checkbox" checked data-text="Add under a ## Conventions or ## Important Rules section in CLAUDE.md.\n\n## Naming &amp; Conventions
+Never rename projects, files, packages, or variables that appear to be typos without asking first. Assume all existing names are intentional. When in doubt, ask.">
+          <label for="cmd-1">
+            <code class="cmd-code">## Naming &amp; Conventions
+Never rename projects, files, packages, or variables that appear to be typos without asking first. Assume all existing names are intentional. When in doubt, ask.</code>
+            <button class="copy-btn" onclick="copyCmdItem(1)">Copy</button>
+          </label>
+          <div class="cmd-why">Claude incorrectly assumed 'xapi-wone-investments' was a typo and tried to rename it — this caused friction and reflects a pattern where Claude second-guesses domain-specific naming.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-2" class="cmd-checkbox" checked data-text="Add under a ## API Design or ## Spring Boot Conventions section in CLAUDE.md.\n\n## API Design Standards
+This project follows a standard ApiRequest/ApiResponse envelope pattern for REST APIs. Do not add endpoints, classes, or fields beyond what is explicitly requested. When designing new APIs, ask for an example from an existing project before assuming patterns.">
+          <label for="cmd-2">
+            <code class="cmd-code">## API Design Standards
+This project follows a standard ApiRequest/ApiResponse envelope pattern for REST APIs. Do not add endpoints, classes, or fields beyond what is explicitly requested. When designing new APIs, ask for an example from an existing project before assuming patterns.</code>
+            <button class="copy-btn" onclick="copyCmdItem(2)">Copy</button>
+          </label>
+          <div class="cmd-why">Claude added unwanted GET endpoints and extra classes, and didn't understand the company's standard envelope pattern until shown an example — this wasted iteration cycles.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-3" class="cmd-checkbox" checked data-text="Add near the top of CLAUDE.md under a ## General Rules section so it applies to all tasks.\n\n## Scope Discipline
+Only implement exactly what is requested. Do not proactively add extra endpoints, classes, or features unless explicitly asked. If you think something additional is needed, suggest it but don't implement it.">
+          <label for="cmd-3">
+            <code class="cmd-code">## Scope Discipline
+Only implement exactly what is requested. Do not proactively add extra endpoints, classes, or features unless explicitly asked. If you think something additional is needed, suggest it but don't implement it.</code>
+            <button class="copy-btn" onclick="copyCmdItem(3)">Copy</button>
+          </label>
+          <div class="cmd-why">Multiple sessions showed Claude over-generating code (extra GET endpoints, unnecessary classes), requiring the user to walk things back. This was a repeated friction point.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-4" class="cmd-checkbox" checked data-text="Add under a ## Documentation section in CLAUDE.md.\n\n## Documentation
+When creating documentation with diagrams, use PlantUML rendered to PNG for Bitbucket/Confluence compatibility. Embed PNGs directly in markdown rather than relying on PlantUML rendering.">
+          <label for="cmd-4">
+            <code class="cmd-code">## Documentation
+When creating documentation with diagrams, use PlantUML rendered to PNG for Bitbucket/Confluence compatibility. Embed PNGs directly in markdown rather than relying on PlantUML rendering.</code>
+            <button class="copy-btn" onclick="copyCmdItem(4)">Copy</button>
+          </label>
+          <div class="cmd-why">The user specifically needed PlantUML+PNG for Bitbucket/Confluence compatibility, indicating a recurring documentation platform constraint.</div>
+        </div>
+      
+    </div>
+    
+    
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code and it'll set it up for you.</p>
+    <div class="features-section">
+      
+        <div class="feature-card">
+          <div class="feature-title">Custom Skills</div>
+          <div class="feature-oneliner">Reusable prompts that run with a single /command for repetitive workflows.</div>
+          <div class="feature-why"><strong>Why for you:</strong> You repeatedly commit, push, and create documentation across almost every session. A /commit skill could standardize your commit flow, and a /doc skill could enforce your PlantUML+PNG Bitbucket-compatible documentation pattern automatically.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">mkdir -p .claude/skills/commit &amp;&amp; cat &gt; .claude/skills/commit/SKILL.md &lt;&lt; 'EOF'
+# Commit &amp; Push Skill
+1. Run `mvn test` if Java files were modified
+2. Stage all changes with `git add -A`
+3. Generate a clear, descriptive commit message summarizing changes
+4. Commit and push to the current branch
+5. Show the commit hash and summary
+EOF</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="feature-card">
+          <div class="feature-title">Hooks</div>
+          <div class="feature-oneliner">Auto-run shell commands at specific lifecycle events like before/after edits.</div>
+          <div class="feature-why"><strong>Why for you:</strong> You had a test casting issue slip through and generally work with Spring Boot/Java. A hook that auto-runs `mvn compile` or `mvn test` after Java file edits would catch build issues immediately rather than discovering them later.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">Add to .claude/settings.json:
+{
+  &quot;hooks&quot;: {
+    &quot;postToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;(Write|Edit)&quot;,
+        &quot;command&quot;: &quot;bash -c 'if git diff --name-only HEAD | grep -q \\.java$; then mvn compile -q 2&gt;&amp;1 | tail -5; fi'&quot;
+      }
+    ]
+  }
+}</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="feature-card">
+          <div class="feature-title">MCP Servers</div>
+          <div class="feature-oneliner">Connect Claude to external tools and APIs via Model Context Protocol.</div>
+          <div class="feature-why"><strong>Why for you:</strong> You're actively working with GitHub (pushing repos, managing multi-account SSH) and could benefit from direct GitHub API integration for creating PRs, checking CI status, and managing issues without switching context.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">claude mcp add github -- npx -y @modelcontextprotocol/server-github</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+    </div>
+    
+    
+    <h2 id="section-patterns">New Ways to Use Claude Code</h2>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code and it'll walk you through it.</p>
+    <div class="patterns-section">
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Front-load context with project examples</div>
+          <div class="pattern-summary">When asking Claude to design APIs or follow company patterns, provide an example file upfront instead of correcting after.</div>
+          <div class="pattern-detail">In your investments API session, Claude initially missed your company's ApiRequest envelope pattern and added unwanted endpoints, requiring multiple corrections. Since you have established patterns across projects, referencing a concrete example file at the start of design conversations will save 2-3 rounds of iteration. Consider adding example file paths to CLAUDE.md so Claude always knows where to look.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Design a new REST endpoint for [feature]. Before starting, read src/main/java/com/example/existing/ExampleController.java and src/main/java/com/example/existing/ApiRequest.java to understand our standard patterns. Follow the same envelope pattern exactly. Only create what I explicitly list.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Batch your git operations into the task</div>
+          <div class="pattern-summary">Include 'commit and push when done' as part of your initial prompt rather than as a separate step.</div>
+          <div class="pattern-detail">Git operations dominated your sessions (15 out of 41 goals). In many sessions, committing and pushing was a separate follow-up request after the main work was done. By including it in the initial prompt — or better yet, adding it to CLAUDE.md as a default — you eliminate an entire round-trip per session. With a /commit custom skill, this becomes even more streamlined.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Create a Spring Boot integration test for [service] using WireMock. After all files are created and tests pass, commit with a descriptive message and push to the current branch.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Use explicit scope boundaries to prevent over-generation</div>
+          <div class="pattern-summary">Start design prompts with 'ONLY create X, Y, Z — nothing else' to prevent Claude from adding unrequested code.</div>
+          <div class="pattern-detail">Across multiple sessions, Claude proactively added extra endpoints, classes, and fields you didn't want. This is Claude's default helpfulness working against you in a context where you have precise architectural requirements. Being explicit about scope boundaries upfront — listing exactly what to create and stating 'do not add anything beyond this list' — will significantly reduce back-and-forth corrections.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Create ONLY the following for the [feature] API:
+- 1 POST endpoint at /api/v1/[resource]
+- 1 Controller class
+- 1 Request DTO following our ApiRequest envelope
+- 1 Response DTO following our ApiResponse envelope
+Do NOT add any other endpoints, services, or classes. I will request those separately.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+    </div>
+    
+    
+
+    
+    <h2 id="section-horizon">On the Horizon</h2>
+    <p class="section-intro">Your workflow shows a strong pattern of iterative documentation and code generation with manual steering—there's massive potential to automate these multi-step pipelines into autonomous, self-verifying workflows.</p>
+    <div class="horizon-section">
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Autonomous Spring Boot Feature Scaffolding Pipeline</div>
+          <div class="horizon-possible">Instead of iteratively guiding Claude through endpoint design, class generation, test writing, and git operations across multiple exchanges, a single prompt could trigger an autonomous pipeline that scaffolds the full feature—controllers, services, request/response DTOs following your ApiRequest envelope pattern, integration tests with WireMock, and a final commit. Claude can run `mvn test` in a loop, fix failures autonomously, and only present the finished, green-build result.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Use Claude Code's task orchestration (TaskCreate/TaskUpdate) to define a multi-step plan, and leverage Bash tool loops to iterate against `mvn test` until all tests pass before committing.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>I need a new POST endpoint for /api/v1/investments/kiwisaver/contributions. Follow our standard patterns: 1) Read existing controllers and the ApiRequest/ApiResponse envelope pattern from src/main/java/**/api/ 2) Scaffold: Controller, Service interface + impl, Request DTO, Response DTO, Repository if needed 3) Create WireMock-based integration test following the template in src/test/ 4) Run `mvn clean test` — if any tests fail, read the errors, fix the code, and re-run until the build is green 5) Create a concise commit message and push to the current branch. Do NOT add endpoints or classes I haven't asked for. Use existing project conventions exactly.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Parallel Documentation and Diagram Generation Agents</div>
+          <div class="horizon-possible">With 54 Markdown files and heavy documentation work including PlantUML diagrams rendered to PNG for Bitbucket/Confluence, you could spawn parallel sub-agents—one generating architectural diagrams, another writing API documentation, another updating the code review checklist—all working simultaneously and merging results. This could compress your documentation sessions from hours of back-and-forth into minutes of autonomous parallel execution.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Use Claude Code's TaskCreate to spawn parallel sub-tasks for each documentation artifact, with each agent reading CLAUDE.md for project conventions and writing to designated directories before a final review merge.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>I need comprehensive documentation for the investments API module. Run these as parallel tasks: TASK 1: Read all Java source files in src/main/java/**/investments/ and generate a PlantUML sequence diagram for the request flow (controller → service → repository → external API). Render it to PNG using `plantuml` CLI. Save both .puml and .png to docs/diagrams/. TASK 2: Generate a REST API reference in Markdown covering all endpoints, request/response schemas (show the ApiRequest envelope), error codes, and example curl commands. Save to docs/api-reference.md. TASK 3: Update docs/code-review-checklist.md with investments-specific review items based on patterns found in the codebase. After all tasks complete, create a docs/README.md index linking everything, commit all changes with message 'docs: comprehensive investments API documentation', and push.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Self-Healing Git Workflow with Convention Enforcement</div>
+          <div class="horizon-possible">Git operations are your #1 activity (15 sessions), and friction occurred when Claude ignored CLAUDE.md conventions or made naming assumptions. You could establish an autonomous pre-flight workflow where Claude reads CLAUDE.md, validates all conventions before every operation, runs a self-check against project naming patterns, and auto-corrects before you ever see output. This eliminates the recurring friction of Claude deviating from your standards and needing manual correction.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Strengthen your CLAUDE.md with machine-readable convention blocks and instruct Claude to run a validation pass at session start. Combine this with a git pre-commit hook that Claude generates and maintains.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>Before doing anything else in this session: 1) Read CLAUDE.md completely and list every instruction/convention back to me in a numbered list 2) Read .git/config and identify the current repo name, branch, and remote 3) Scan the project for naming patterns: list all module names, package naming conventions, and existing branch names 4) Create a file .claude/session-conventions.md summarizing all discovered conventions 5) Then set up a git pre-commit hook at .githooks/pre-commit that validates: commit message format, no files outside expected directories, no TODO comments without ticket numbers. Install it with `git config core.hooksPath .githooks`. Commit the hook itself. From this point forward, before ANY git operation, re-read .claude/session-conventions.md and validate your planned action against it. If anything conflicts, stop and ask me rather than assuming.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+    </div>
+    
+
+    
+    <div class="fun-ending">
+      <div class="fun-headline">"Claude tried to 'fix' a project name it thought was a typo — turns out 'xapi-wone-investments' was perfectly correct, thank you very much"</div>
+      <div class="fun-detail">During an investments API design session, Claude assumed 'wone' in the project name was a mistake and attempted to rename it, prompting the user to set the record straight. A classic case of an AI being a little too helpful with the spell-check.</div>
+    </div>
+    
+
+    
+  </div>
+  <script>
+    function toggleCollapsible(header) {
+      header.classList.toggle('open');
+      const content = header.nextElementSibling;
+      content.classList.toggle('open');
+    }
+    function copyText(btn) {
+      const code = btn.previousElementSibling;
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+    function copyCmdItem(idx) {
+      const checkbox = document.getElementById('cmd-' + idx);
+      if (checkbox) {
+        const text = checkbox.dataset.text;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = checkbox.nextElementSibling.querySelector('.copy-btn');
+          if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
+        });
+      }
+    }
+    function copyAllCheckedClaudeMd() {
+      const checkboxes = document.querySelectorAll('.cmd-checkbox:checked');
+      const texts = [];
+      checkboxes.forEach(cb => {
+        if (cb.dataset.text) { texts.push(cb.dataset.text); }
+      });
+      const combined = texts.join('\n');
+      const btn = document.querySelector('.copy-all-btn');
+      if (btn) {
+        navigator.clipboard.writeText(combined).then(() => {
+          btn.textContent = 'Copied ' + texts.length + ' items!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy All Checked'; btn.classList.remove('copied'); }, 2000);
+        });
+      }
+    }
+    // Timezone selector for time of day chart (data is from our own analytics, not user input)
+    const rawHourCounts = {"6":7,"7":7,"9":38,"10":1,"12":7,"19":2,"21":8,"22":11,"23":9};
+    function updateHourHistogram(offsetFromPT) {
+      const periods = [
+        { label: "Morning (6-12)", range: [6,7,8,9,10,11] },
+        { label: "Afternoon (12-18)", range: [12,13,14,15,16,17] },
+        { label: "Evening (18-24)", range: [18,19,20,21,22,23] },
+        { label: "Night (0-6)", range: [0,1,2,3,4,5] }
+      ];
+      const adjustedCounts = {};
+      for (const [hour, count] of Object.entries(rawHourCounts)) {
+        const newHour = (parseInt(hour) + offsetFromPT + 24) % 24;
+        adjustedCounts[newHour] = (adjustedCounts[newHour] || 0) + count;
+      }
+      const periodCounts = periods.map(p => ({
+        label: p.label,
+        count: p.range.reduce((sum, h) => sum + (adjustedCounts[h] || 0), 0)
+      }));
+      const maxCount = Math.max(...periodCounts.map(p => p.count)) || 1;
+      const container = document.getElementById('hour-histogram');
+      container.textContent = '';
+      periodCounts.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        const label = document.createElement('div');
+        label.className = 'bar-label';
+        label.textContent = p.label;
+        const track = document.createElement('div');
+        track.className = 'bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.style.width = (p.count / maxCount) * 100 + '%';
+        fill.style.background = '#8b5cf6';
+        track.appendChild(fill);
+        const value = document.createElement('div');
+        value.className = 'bar-value';
+        value.textContent = p.count;
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(value);
+        container.appendChild(row);
+      });
+    }
+    document.getElementById('timezone-select').addEventListener('change', function() {
+      const customInput = document.getElementById('custom-offset');
+      if (this.value === 'custom') {
+        customInput.style.display = 'inline-block';
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+        updateHourHistogram(parseInt(this.value));
+      }
+    });
+    document.getElementById('custom-offset').addEventListener('change', function() {
+      const offset = parseInt(this.value) + 8;
+      updateHourHistogram(offset);
+    });
+  </script>
+</body>
+</html>
