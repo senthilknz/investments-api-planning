@@ -15,9 +15,36 @@ Component tests validate the full request lifecycle of the API — from HTTP req
 | Test framework | JUnit 5 | Test execution and lifecycle |
 | Application boot | `@SpringBootTest(RANDOM_PORT)` | Starts full embedded server |
 | HTTP client (test) | Spring `RestClient` | Fluent, synchronous API calls |
-| ESB mock server | WireMock | Stubs external ESB HTTP responses |
+| ESB mock server | WireMock Spring Boot 4.1.0 | Stubs external ESB HTTP responses |
 | Assertions | AssertJ | Fluent, readable assertions |
 | Test profile | `application-test.yml` | Overrides ESB base URL and timeouts |
+
+### Maven Dependency
+
+```xml
+<dependency>
+    <groupId>org.wiremock.integrations</groupId>
+    <artifactId>wiremock-spring-boot</artifactId>
+    <version>4.1.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+### Key Annotations (v4.x)
+
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EnableWireMock({
+    @ConfigureWireMock(name = "esb-service", baseUrlProperties = "esb.base-url")
+})
+class InvestmentControllerIT {
+
+    @InjectWireMock("esb-service")
+    private WireMockServer esbMock;
+}
+```
+
+> **Note:** In WireMock Spring Boot v4.x, the `@ConfigureWireMock` annotation uses `baseUrlProperties` (not `property` from v3.x). Also, `urlPathAnyMatching()` was removed — use `anyUrl()` instead.
 
 ### What Gets Tested
 
