@@ -37,7 +37,7 @@ Component tests validate the full request lifecycle of the API — from HTTP req
 @EnableWireMock({
     @ConfigureWireMock(name = "esb-service", baseUrlProperties = "esb.base-url")
 })
-class InvestmentControllerIT {
+class InvestmentControllerComponentTest {
 
     @InjectWireMock("esb-service")
     private WireMockServer esbMock;
@@ -66,7 +66,7 @@ class InvestmentControllerIT {
 src/test/
 ├── java/com/westpac/xapi/investments/
 │   └── controller/
-│       └── InvestmentControllerIT.java        ← Integration test class
+│       └── InvestmentControllerComponentTest.java        ← Component test class
 └── resources/
     ├── application-test.yml                    ← Test profile config
     └── wiremock/
@@ -199,7 +199,7 @@ Component tests run as part of the standard Maven build lifecycle with **zero ex
 ```bash
 mvn test                          # runs all tests including component tests
 mvn verify                        # runs as part of integration test phase
-mvn test -Dtest=InvestmentControllerIT  # runs only component tests
+mvn test -Dtest=InvestmentControllerComponentTest  # runs only component tests
 ```
 
 No Docker containers, no external WireMock servers, no ESB connectivity — everything runs in-process.
@@ -269,7 +269,7 @@ Component tests sit in the middle of the test pyramid — they provide significa
 
 2. Add the response body in `src/test/resources/wiremock/__files/holdings/rate-limited.json`
 
-3. Write the test assertion in `InvestmentControllerIT.java`
+3. Write the test assertion in `InvestmentControllerComponentTest.java`
 
 ### Option 2: Add a Programmatic Stub
 
@@ -300,11 +300,11 @@ void shouldHandleRateLimiting() {
 mvn test
 
 # Run only component tests
-mvn test -Dtest=InvestmentControllerIT
+mvn test -Dtest=InvestmentControllerComponentTest
 
 # Run a specific test method
-mvn test -Dtest="InvestmentControllerIT#GetHoldings#shouldReturnHoldings"
+mvn test -Dtest="InvestmentControllerComponentTest#GetHoldings#shouldReturnHoldings"
 
 # Run with verbose output
-mvn test -Dtest=InvestmentControllerIT -Dspring.test.verbose=true
+mvn test -Dtest=InvestmentControllerComponentTest -Dspring.test.verbose=true
 ```

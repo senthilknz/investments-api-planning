@@ -20,11 +20,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration test template for investment API endpoints.
+ * Component test template for investment API endpoints.
  *
  * This test starts the full Spring Boot application with an embedded server
  * and uses WireMock to stub external ESB API calls. The full request flow
- * is tested end-to-end:
+ * is tested through the application stack with only external dependencies mocked:
  *
  *   Real HTTP → Controller → Service → ESB Client → [WireMock] ESB API
  *
@@ -41,8 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnableWireMock({
     @ConfigureWireMock(name = "esb-service", baseUrlProperties = "esb.base-url")
 })
-@DisplayName("Investment Controller Integration Tests")
-class InvestmentControllerIT {
+@DisplayName("Investment Controller Component Tests")
+class InvestmentControllerComponentTest {
 
     private RestClient restClient;
 
