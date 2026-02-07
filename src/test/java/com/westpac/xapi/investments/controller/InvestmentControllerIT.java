@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @EnableWireMock({
-    @ConfigureWireMock(name = "esb-service", property = "esb.base-url")
+    @ConfigureWireMock(name = "esb-service", baseUrlProperties = "esb.base-url")
 })
 @DisplayName("Investment Controller Integration Tests")
 class InvestmentControllerIT {
@@ -313,7 +313,7 @@ class InvestmentControllerIT {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
             // ESB should NOT have been called
-            esbMock.verify(0, postRequestedFor(urlPathAnyMatching(".*")));
+            esbMock.verify(0, postRequestedFor(anyUrl()));
         }
 
         @Test

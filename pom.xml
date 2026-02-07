@@ -63,9 +63,9 @@
 
         <!-- WireMock for stubbing external ESB APIs in integration tests -->
         <dependency>
-            <groupId>org.wiremock</groupId>
+            <groupId>org.wiremock.integrations</groupId>
             <artifactId>wiremock-spring-boot</artifactId>
-            <version>3.2.0</version>
+            <version>4.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
