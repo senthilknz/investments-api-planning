@@ -148,6 +148,7 @@ class InvestmentControllerComponentTest {
         void shouldReturn404WhenCustomerNotFound() {
             String customerId = "UNKNOWN";
 
+            // Configures ESB mock to return customer not found
             esbMock.stubFor(get(urlPathEqualTo(ESB_HOLDINGS_PATH.formatted(customerId)))
                 .willReturn(aResponse()
                     .withStatus(404)
