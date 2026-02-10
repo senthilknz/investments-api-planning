@@ -7,13 +7,5 @@
       "Bash(mvn compile:*)",
       "Bash(git commit:*)"
     ]
-  },
-  "hooks": {
-    "postToolUse": [
-      {
-        "matcher": "(Write|Edit)",
-        "command": "bash -c 'if git diff --name-only HEAD | grep -q \\.java$; then mvn compile -q 2>&1 | tail -5; fi'"
-      }
-    ]
   }
 }
