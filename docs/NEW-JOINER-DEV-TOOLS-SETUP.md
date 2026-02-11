@@ -73,7 +73,7 @@ main (or develop)
 | 3. Push & PR | Push branch to Bitbucket, create a Pull Request |
 | 4. Code review | At least _TODO: Add number_ approvals required |
 | 5. Merge | Squash merge into `develop` |
-| 6. Deploy | CloudBees triggers Spinnaker — approve & deploy to SYST |
+| 6. Deploy | CloudBees creates a Spinnaker deploy task — developer manually triggers deployment to SYST |
 
 ### PR Best Practices
 
@@ -107,7 +107,7 @@ main (or develop)
 | ↳ SonarQube | Code quality analysis & quality gate (CloudBees stage) | Build |
 | ↳ JFrog Artifactory | Artifact & Helm chart repository (CloudBees publishes here) | Build |
 | ↳ Helm | Chart linting, deprecation check & publish (CloudBees stages) | Build |
-| ↳ Spinnaker | Deployment orchestration (triggered by CloudBees) | Deploy |
+| ↳ Spinnaker | Deployment orchestration (CloudBees creates task, developer triggers manually) | Deploy |
 | OpenShift | Container platform (runtime) | Run |
 | HashiCorp Vault | Secrets management (API keys, credentials, certificates) | Run |
 | Splunk | Log aggregation & search | Monitor |
@@ -178,7 +178,7 @@ _TODO: Add Bitbucket instance URL_
 ### 2. CloudBees
 
 **What is it?**
-CloudBees is our CI/CD platform built on Jenkins. It orchestrates the **entire build-to-deploy flow** — from code checkout through to triggering Spinnaker deployment.
+CloudBees is our CI/CD platform built on Jenkins. It orchestrates the **entire build flow** — from code checkout through to creating a Spinnaker deployment task. Deployment is then **manually triggered** by the developer.
 
 **URL:**
 _TODO: Add CloudBees instance URL_
@@ -200,7 +200,7 @@ The CloudBees pipeline runs the following stages in order on PR merge:
 | 4 | **Helm - Lint** | Validates Helm chart syntax | ~18s |
 | 5 | **Helm - Deprecation Check** | Checks for deprecated Helm APIs | ~1s |
 | 6 | **Helm - Publish** | Publishes Helm chart to JFrog | ~2s |
-| 7 | **Spinnaker** | Triggers the Spinnaker deployment pipeline | ~10s |
+| 7 | **Spinnaker** | Creates a deployment task in Spinnaker (developer triggers manually) | ~10s |
 | 8 | **archiveArtifacts** | Archives build artifacts for reference | <1s |
 | 9 | **Workspace Cleanup** | Cleans up the build workspace | ~1s |
 
@@ -209,7 +209,7 @@ The CloudBees pipeline runs the following stages in order on PR merge:
 - **Pipeline Triggers:** _TODO: Describe when pipelines run (e.g., on every PR, on merge to master)_
 - **Build Notifications:** _TODO: Add where build notifications go (e.g., Teams channel, email)_
 - If a stage fails, the pipeline stops — check the **console output** in CloudBees for error details before reaching out
-- The **Spinnaker stage** means deployment is triggered automatically by CloudBees — you don't need to manually trigger Spinnaker
+- The **Spinnaker stage** creates a deployment task — you must **manually trigger** the deployment in Spinnaker when ready
 
 **Useful Links:**
 - _TODO: Add links to Jenkinsfile location, pipeline documentation_
@@ -308,7 +308,7 @@ _TODO: Add Snyk website/dashboard URL_
 ### 6. Spinnaker
 
 **What is it?**
-Spinnaker is our deployment orchestration tool. It manages deployments across environments (SYST, UAT, PERF, PROD) with approval gates and rollback capabilities. Spinnaker is **triggered automatically by CloudBees** as the final pipeline stage — you do not need to trigger it manually.
+Spinnaker is our deployment orchestration tool. It manages deployments across environments (SYST, UAT, PERF, PROD) with approval gates and rollback capabilities. CloudBees creates a deployment task in Spinnaker as the final pipeline stage — the developer then **manually triggers** the deployment when ready.
 
 **URL:**
 _TODO: Add Spinnaker instance URL_
@@ -321,7 +321,7 @@ _TODO: Add Spinnaker instance URL_
 **Key Things to Know:**
 - **Team Application:** _TODO: Add application name in Spinnaker_
 - **Environments:** SYST → UAT + PERF (simultaneous) → CR in ServiceNow → PROD
-- **How it's triggered:** CloudBees pipeline triggers Spinnaker after successful build, test, and Helm chart publish
+- **How it works:** CloudBees creates a deploy task after successful build, test, and Helm chart publish — developer manually triggers the deployment
 - **Deployment Flow:** SYST (approve & deploy) → UAT + PERF (approve & deploy, simultaneous) → PROD (requires approved CR in ServiceNow)
 - Production deployments require an approved **Change Request (CR)** in ServiceNow before Spinnaker will proceed
 - Familiarise yourself with the rollback process before deploying

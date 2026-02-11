@@ -21,7 +21,7 @@ package "**CloudBees Pipeline**" as cbpkg #E8F5E9 {
     rectangle "App -\nSonarQube" as sonar #DCEDC8
     rectangle "App - Verify,\nBuild & Publish" as build #C8E6C9
     rectangle "Helm - Lint,\nCheck & Publish" as helm #C8E6C9
-    rectangle "Trigger\nSpinnaker" as cbtrigger #E1BEE7
+    rectangle "Create\nDeploy Task" as cbtrigger #E1BEE7
 }
 
 rectangle "**JFrog**\nArtifact Repository\nDocker Images" as jfrog #FFE0B2
@@ -55,7 +55,7 @@ helm -right-> cbtrigger
 build -down-> jfrog : publish\nartifacts
 helm -down-> jfrog : publish\nhelm chart
 
-cbtrigger -down-> spin : trigger\ndeployment
+cbtrigger -down-> spin : creates deploy\ntask (manual)
 
 spin -right-> syst : approve &\ndeploy
 syst -right-> uat : approve &\ndeploy
