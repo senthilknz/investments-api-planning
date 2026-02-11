@@ -13,14 +13,13 @@ Use this as your day-by-day guide. Don't try to do everything on Day 1 — focus
 ### Day 1 — Access & Environment
 
 - [ ] Raise ALL access requests (see [Access Request Checklist](#access-request-checklist)) — some take 2–3 days
-- [ ] Set up your local development environment (see [Local Development Setup](#local-development-setup))
-- [ ] Clone the repository and run the build
+- [ ] Clone the repository and set up your local environment (see [Local Development Setup](#local-development-setup))
 - [ ] Meet your onboarding buddy
 - [ ] Join team communication channels: _TODO: Add Teams/Slack channel names_
 
 ### Day 2 — Understand the System
 
-- [ ] Read the [Architecture Overview](#architecture-overview) below
+- [ ] Clone the repository and follow the README (see [Local Development Setup](#local-development-setup))
 - [ ] Explore the codebase — focus on the controller → service → ESB client flow
 - [ ] Run the component tests and review how WireMock stubs work
 - [ ] Read the existing API design documentation
@@ -43,37 +42,9 @@ Use this as your day-by-day guide. Don't try to do everything on Day 1 — focus
 
 ---
 
-## Architecture Overview
-
-Our team owns the **Experience API (xAPI) layer** — the middleware between customer-facing frontends and backend core banking systems via the ESB.
-
-![Architecture Context](diagrams/images/07-architecture-context.png)
-
-### What Our Code Does
-
-| Responsibility | Description |
-|---|---|
-| Request validation | Validate incoming API requests using Bean Validation (`@Valid`) |
-| Data transformation | Map between frontend JSON format and ESB API format |
-| Error handling | Translate ESB errors into standard API error envelopes |
-| Logging & correlation | Inject correlation IDs, log request/response payloads |
-| Security | Authenticate and authorise API consumers |
-
-### Key Technology Stack
-
-| Technology | Version | Purpose |
-|---|---|---|
-| Java | 17 | Language |
-| Spring Boot | 3.5.6 | Application framework |
-| Maven | 3.9.x | Build tool (use `./mvnw` wrapper) |
-| JUnit 5 + WireMock | 4.1.0 | Component testing |
-| OpenShift | — | Container runtime (Kubernetes) |
-
----
-
 ## Local Development Setup
 
-Clone the repository and follow the **README.md** in the project root for prerequisites, build instructions, and IntelliJ setup.
+Clone the repository and follow the **README.md** in the project root for architecture overview, prerequisites, build instructions, and IntelliJ setup.
 
 ```bash
 git clone <bitbucket-repo-url>
