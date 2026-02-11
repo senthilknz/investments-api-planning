@@ -1,0 +1,47 @@
+@startuml 08-environment-flow
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title Environment Promotion Flow
+
+rectangle "**Local**\nDeveloper Machine\nmvn test + WireMock" as local #E1F5FE
+
+rectangle "**SYST**\nSystem Testing" as syst #C8E6C9
+
+rectangle "**UAT**\nUser Acceptance\nTesting" as uat #C8E6C9
+
+rectangle "**PERF**\nPerformance\nTesting" as perf #C8E6C9
+
+rectangle "**ServiceNow**\nChange Request\n(CR)" as cr #FFF9C4
+
+rectangle "**PROD**\nProduction\nLive Traffic" as prod #FFCDD2
+
+local -right-> syst : PR merge\n(approve & deploy)
+syst -right-> uat : approve &\ndeploy
+syst -right-> perf : approve &\ndeploy
+uat -right-> cr
+perf -right-> cr
+cr -right-> prod : CR approved
+
+note bottom of local
+  Component tests run here
+  with WireMock stubs
+  (no environment dependency)
+end note
+
+note bottom of uat
+  UAT and PERF are
+  deployed simultaneously
+end note
+
+note bottom of prod
+  All environments run on
+  **OpenShift** with **Vault** (secrets),
+  **Splunk** (logs), **Dynatrace** (APM)
+end note
+
+@enduml

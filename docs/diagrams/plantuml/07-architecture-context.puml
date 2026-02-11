@@ -1,0 +1,37 @@
+@startuml 07-architecture-context
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title Architecture Context — xAPI Investments
+
+actor "Customer" as customer
+rectangle "**Web / Mobile App**\n(Frontend)" as frontend #E1F5FE
+
+package "Experience API Layer (xAPI)" as xapi #E8F5E9 {
+    rectangle "**xapi-wone-investments**\nSpring Boot\nREST API" as api #C8E6C9
+}
+
+package "Enterprise Service Bus" as esb #FFF9C4 {
+    rectangle "**ESB APIs**\nBackend Systems\nCore Banking" as esbapi #FFE0B2
+}
+
+database "**Core Systems**\nAccounts\nKiwiSaver\nActive Series" as core #FFCDD2
+
+customer -right-> frontend : interacts
+frontend -right-> api : REST calls\n(JSON)
+api -right-> esbapi : HTTP calls\n(JSON)
+esbapi -right-> core : backend\nintegration
+
+note bottom of api
+  **Our team owns this layer**
+  - Request validation
+  - Data transformation
+  - Error handling
+  - Logging & correlation
+end note
+
+@enduml

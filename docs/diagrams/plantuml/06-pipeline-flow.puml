@@ -1,0 +1,73 @@
+@startuml 06-pipeline-flow
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+skinparam rectangle {
+    FontSize 12
+}
+
+title CI/CD Pipeline Flow — Digital Investments
+
+rectangle "**Developer**" as dev #E1F5FE
+rectangle "**Bitbucket**\nPull Request\nCode Review" as bb #BBDEFB
+rectangle "**Snyk**\nSCM Scanning\n(last 90 days)" as snyk #FFF9C4
+
+package "**CloudBees Pipeline**" as cbpkg #E8F5E9 {
+    rectangle "Checkout\nSCM" as checkout #C8E6C9
+    rectangle "App -\nSonarQube" as sonar #DCEDC8
+    rectangle "App - Verify,\nBuild & Publish" as build #C8E6C9
+    rectangle "Helm - Lint,\nCheck & Publish" as helm #C8E6C9
+    rectangle "Trigger\nSpinnaker" as cbtrigger #E1BEE7
+}
+
+rectangle "**JFrog**\nArtifact Repository\nDocker Images" as jfrog #FFE0B2
+
+rectangle "**Spinnaker**\nDeployment\nOrchestration" as spin #E1BEE7
+
+package "**Environments** (all run on OpenShift)" as envpkg #E8F5E9 {
+    rectangle "SYST" as syst #C8E6C9
+    rectangle "UAT" as uat #C8E6C9
+    rectangle "PERF" as perf #C8E6C9
+    rectangle "**ServiceNow**\nChange Request" as cr #FFF9C4
+    rectangle "PROD" as prod #FFCDD2
+}
+
+package "**Runtime Infrastructure** (all environments)" as runtime #F3E5F5 {
+    rectangle "**OpenShift**\nContainer Platform\nKubernetes" as os #FFCDD2
+    rectangle "**HashiCorp Vault**\nSecrets Management" as vault #FFE0B2
+    rectangle "**Splunk**\nLogs" as splunk #F3E5F5
+    rectangle "**Dynatrace**\nAPM" as dyna #F3E5F5
+}
+
+dev -right-> bb : git push
+bb -down-> snyk : PR scan\n(SCM integration)
+bb -right-> checkout : PR merge
+
+checkout -right-> sonar
+sonar -right-> build
+build -right-> helm
+helm -right-> cbtrigger
+
+build -down-> jfrog : publish\nartifacts
+helm -down-> jfrog : publish\nhelm chart
+
+cbtrigger -down-> spin : trigger\ndeployment
+
+spin -right-> syst : approve &\ndeploy
+syst -right-> uat : approve &\ndeploy
+syst -right-> perf : approve &\ndeploy
+uat -right-> cr
+perf -right-> cr
+cr -right-> prod : CR approved
+
+envpkg -down-> runtime
+
+vault -right-> os : inject secrets\n(sidecar / init)
+os -right-> splunk : logs
+os -right-> dyna : metrics
+
+@enduml
