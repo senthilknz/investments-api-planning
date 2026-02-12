@@ -39,7 +39,8 @@ package "**Environments** (all run on OpenShift)" as envpkg #E8F5E9 {
 package "**Runtime Infrastructure** (all environments)" as runtime #F3E5F5 {
     rectangle "**OpenShift**\nContainer Platform\nKubernetes" as os #FFCDD2
     rectangle "**HashiCorp Vault**\nSecrets Management" as vault #FFE0B2
-    rectangle "**Splunk**\nLogs" as splunk #F3E5F5
+    rectangle "**Fluent Bit**\nLog Collector\nSidecar" as fluentbit #DCEDC8
+    rectangle "**Splunk**\nHeavy Forwarder\n→ Indexer → Search Head" as splunk #F3E5F5
     rectangle "**Dynatrace**\nAPM" as dyna #F3E5F5
 }
 
@@ -67,7 +68,8 @@ cr -right-> prod : CR approved
 envpkg -down-> runtime
 
 vault -right-> os : inject secrets\n(sidecar / init)
-os -right-> splunk : logs
+os -right-> fluentbit : pod logs\n(/app/logs/)
+fluentbit -right-> splunk : HTTP Event\nCollector
 os -right-> dyna : metrics
 
 @enduml

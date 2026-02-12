@@ -457,7 +457,7 @@ _TODO: Add ServiceNow instance URL_
 ### 10. Splunk
 
 **What is it?**
-Splunk is our log aggregation and search platform. Application logs from OpenShift are shipped to Splunk, where you can search, filter, and create dashboards for troubleshooting and monitoring.
+Splunk is our log aggregation and search platform. Application logs from OpenShift pods are collected by a **Fluent Bit sidecar** (log collector agent), which reads from `/app/logs/` and forwards them to Splunk via the **HTTP Event Collector (HEC)**. Logs flow through: Fluent Bit → Splunk Heavy Forwarder → Splunk Indexer → Splunk Search Head (where you query).
 
 **URL:**
 _TODO: Add Splunk instance URL_
@@ -561,6 +561,7 @@ _TODO: Add Dynatrace instance URL_
 | **Quality Gate** | SonarQube checkpoint — build fails if code quality thresholds are not met |
 | **Vault** | HashiCorp Vault — secrets management platform for API keys, credentials, and certificates |
 | **Helm** | Kubernetes package manager — defines how our app is deployed to OpenShift |
+| **Fluent Bit** | Lightweight log collector sidecar — forwards pod logs to Splunk via HEC |
 | **SYST** | System Testing environment — first deployment target after PR merge |
 | **UAT** | User Acceptance Testing environment |
 | **PERF** | Performance Testing environment — deployed simultaneously with UAT |
