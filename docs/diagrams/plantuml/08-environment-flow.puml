@@ -21,6 +21,7 @@ rectangle "**ServiceNow**\nChange Request\n(CR)" as cr #FFF9C4
 rectangle "**PROD**\nProduction\nLive Traffic" as prod #FFCDD2
 
 local -right-> syst : PR merge\n(approve & deploy)
+local -right-> syst : feature/bugfix branch\n(approve & deploy, no PR needed)
 syst -right-> uat : approve &\ndeploy
 syst -right-> perf : approve &\ndeploy
 uat -right-> cr
@@ -31,6 +32,12 @@ note bottom of local
   Component tests run here
   with WireMock stubs
   (no environment dependency)
+end note
+
+note top of syst
+  Feature/bugfix branches can
+  also be deployed to SYST
+  for early testing before PR
 end note
 
 note bottom of uat

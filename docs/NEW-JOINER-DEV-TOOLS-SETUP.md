@@ -120,7 +120,7 @@ main (or develop)
 | Environment | Purpose | Deploy Method | Who Can Access |
 |---|---|---|---|
 | **Local** | Developer testing (WireMock stubs) | `./mvnw spring-boot:run` | You |
-| **SYST** | System testing | Approve & deploy in Spinnaker | Dev team |
+| **SYST** | System testing | Approve & deploy in Spinnaker (PR merge or feature/bugfix branch) | Dev team |
 | **UAT** | User acceptance testing | Approve & deploy in Spinnaker (simultaneous with PERF) | Dev + QA |
 | **PERF** | Performance testing | Approve & deploy in Spinnaker (simultaneous with UAT) | Dev + QA + Perf |
 | **PROD** | Live customer traffic | Change Request (CR) approved in ServiceNow | Ops + on-call |
